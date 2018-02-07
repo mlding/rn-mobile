@@ -1,0 +1,2 @@
+json_key_file "../bin/google-play-android-secret.json" # Path to the json secret file - Follow https://github.com/fastlane/supply#setup to get one
+package_name "com.vitruvimobile" # e.g. com.krausefx.app

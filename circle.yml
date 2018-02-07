@@ -1,0 +1,61 @@
+machine:
+  environment:
+    GYM_CODE_SIGNING_IDENTITY: "iPhone Distribution: Fresnel Software Corporation (6DA46M6SM4)"
+    XCODE_SCHEME: VitruviMobile
+    # Needed for Android SDK installation bash script
+    ANDROID_HOME: "/usr/local/share/android-sdk"
+    ANDROID_SDK_HOME: "/usr/local/share/android-sdk"
+    ANDROID_SDK_ROOT: "/usr/local/share/android-sdk"
+  xcode:
+    version: 8.3.3
+
+dependencies:
+  pre:
+    # Install nvm, npm & yarn
+    - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+    - nvm install 8.9.1
+    - npm install yarn --global
+    - npm install detox-cli -g
+    - brew update
+    - brew tap wix/brew
+    - brew install --HEAD applesimutils
+    # Install Gems (fastlane, etc)
+    - bundle check --path=vendor/bundle || bundle install --path=vendor/bundle --jobs=4 --retry=3 --without development
+    # Install cocoapods
+    - gem install cocoapods
+  override:
+    - yarn install
+    # Install cocoapods dependencies
+    - cd ios && pod install
+  cache_directories:
+    - ~/.android
+    - ~/.gradle
+    - ~/.cache/yarn
+    - node_modules
+    - ios/Pods
+    - /usr/local/android-sdk-linux/tools
+    - /usr/local/android-sdk-linux/build-tools/23.0.2
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/jest
+
+test:
+  pre:
+    - yarn lint
+  override:
+    - yarn test
+    - detox build --configuration ios.sim.release
+    - detox clean-framework-cache && detox build-framework-cache
+    - detox test --configuration ios.sim.release --cleanup
+  post:
+    - mkdir $CIRCLE_ARTIFACTS/coverage
+    - mv coverage/* $CIRCLE_ARTIFACTS/coverage
+
+deployment:
+  beta:
+    branch: master 
+    commands:
+      # Build and deploy IOS app
+      - cd ios && bundle exec fastlane ios beta
+      - ./bin/ci-android-deploy-setup.sh
+      # Build and deploy Android app
+      - cd android && ./gradlew clean && bundle exec fastlane android beta

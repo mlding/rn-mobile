@@ -1,0 +1,1933 @@
+swagger: '2.0'
+info:
+  description: Vitruvi Mobile API
+  version: 1.0.0
+  title: Vitruvi Mobile
+  contact:
+    email: pphan@thoughtworks.com
+host: vitruvi.swagger.io
+basePath: /v1
+tags:
+  - name: Timesheet
+    description: Operations about timesheet
+  - name: Quantity descriptions
+    description: Quantity descriptions
+  - name: Extra work order requests
+    description: Operations about extra work order requests
+  - name: Notification
+    description: Push notification service
+  - name: work items
+    description: Operations about work items
+  - name: production reports
+    description: Operations about production reports
+  - name: production report
+    description: Operations about production report
+  - name: auth
+    description: Authentication operations
+  - name: work item materials
+    description: Get material list for work item
+  - name: upload photos
+    description: Upload photos
+  - name: work package attachments
+    description: Work package attachments
+  - name: as built
+    description: As built
+schemes:
+  - http
+paths:
+  /mobile/timesheets:
+    get:
+      tags:
+        - Timesheet
+      summary: Get timesheets
+      description: Get timesheet list, If current user is lead worker, return timesheets that created_by is current user. If current user is construction manager, returns timesheets that approver is current user.
+
+
+        For get Bernie's timesheet list, it should order by status in the sequence of flagged, resubmitted, submitted, approved. Within each status sort the list by submitted
+        date, newest on the top.
+
+        - request param example
+
+        ordering_by_status= flagged, resubmitted, submitted, approved&ordering=-submitted_date
+
+
+        For get Bill's timesheet list, it should order by status in the sequence of resubmitted, submitted, flagged, issued, in progress, completed, Within each status sort the list by submitted
+        date, newest on the top.
+
+        - request param example
+
+        ordering_by_status=resubmitted, submitted, flagged,approved&ordering=-submitted_date
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          type: integer
+        - name: ordering_by_status
+          in: query
+          description: Which field to use when ordering the results, it will give a parameter like this 'flagged, resubmitted, submitte,approved'
+          type: string
+        - name: ordering
+          in: query
+          description: Which field to use when ordering the results.
+          type: string
+        - name: created_by
+          in: query
+          description:
+            Filter extra work order requests by create_by (user_id), only exist when
+            role is lead worker
+          type: string
+        - name: approver
+          in: query
+          description:
+            Filter extra work order requests by approver (user_id), only exist when role
+            is construction manager
+          type: string
+      responses:
+        '200':
+          description: Get timesheets successfully
+          schema:
+            $ref: '#/definitions/timesheets'
+    post:
+      tags:
+        - Timesheet
+      summary: Create timesheet
+      description: Create timesheet
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: body
+          in: body
+          description: timesheet object for create
+          required: true
+          schema:
+            $ref: '#/definitions/timesheet_min'
+      responses:
+        '200':
+          description: Create timesheet successfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/timesheets/{id}:
+    put:
+      tags:
+        - Timesheet
+      summary: Update timesheet
+      description:
+        Update a timesheet
+
+        when delete a exist timesheet item, will remove the timesheet item in put parameter, it's hard delete?
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of timesheet to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Object for update timesheet
+          required: true
+          schema:
+            $ref: '#/definitions/timesheet'
+      responses:
+        '200':
+          description: Update timesheet successfully
+        '400':
+          description: Failed to update timesheet
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: Timesheet not found
+    patch:
+      tags:
+        - Timesheet
+      summary: Update status and comments for timesheet
+      description: Update status and comments for timesheet
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of timesheet to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Update part parameter for timesheet
+          required: true
+          schema:
+            allOf:
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    example: flagged
+                  comments:
+                    type: string
+                    example: descriprion is not clear
+      responses:
+        '200':
+          description: update the status scuessfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: Timesheet not found
+  /api/v1/quantity_descriptions:
+    get:
+      tags:
+        - Quantity descriptions
+      summary: Get quantity descriptions
+      description: When create extra work order item, need to provide user a unit dropdown list. Quantity descriptions list is the data source for the dropdown list
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+      responses:
+        '200':
+          description: Get quantity descriptions successfully
+          schema:
+            $ref: '#/definitions/quantity_descriptions'
+  /mobile/extra_work_order_requests:
+    get:
+      tags:
+        - Extra work order requests
+      summary: Get extra work order requests
+      description: Get extra work order request list. If current user is lead worker, return extra work order requests that created_by is current user. If current user is construction manager, returns extra work orders that approver is current user.
+
+
+        For get Bernie's extra work order request list, it should order by status in the sequence of flagged, resubmitted, submitted, approved. Within each status sort the list by submitted
+        date, newest on the top.
+
+        - request param example
+
+        ordering_by_status= flagged,resubmitted,submitted,approved&ordering=-submitted_date
+
+
+        For get Bill's extra work order request list, it should order by status in the sequence of resubmitted, submitted, flagged, approved. Within each status sort the list by submitted
+        date, newest on the top.
+
+        - request param example
+
+        ordering_by_status=resubmitted,submitted,flagged,approved&ordering=-submitted_date
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          type: integer
+        - name: ordering_by_status
+          in: query
+          description: Which field to use when ordering the results, it will give a parameter like this 'flagged,resubmitted,submitted,approved'
+          type: string
+        - name: ordering
+          in: query
+          description: Which field to use when ordering the results.
+          type: string
+        - name: created_by
+          in: query
+          description:
+            Filter extra work order requests by create_by (user_id), only exist when
+            role is lead worker
+          type: string
+        - name: approver
+          in: query
+          description:
+            Filter extra work order requests by approver (user_id), only exist when role
+            is construction manager
+          type: string
+      responses:
+        '200':
+          description: Get production reports successfully
+          schema:
+            $ref: '#/definitions/extra_work_order_requests'
+    post:
+      tags:
+        - Extra work order requests
+      summary: Create extra work order requests
+      description:
+
+        Create extra work order  requests list
+
+        the work package and work order are from exist assigned work items
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: body
+          in: body
+          description: extra work order request object for create
+          required: true
+          schema:
+            $ref: '#/definitions/extra_work_order_request_min'
+      responses:
+        '200':
+          description: Create extra work order request successfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/extra_work_order_requests/{id}:
+    put:
+      tags:
+        - Extra work order requests
+      summary: Update extra work order request
+      description:
+        Update a extra work order request
+
+        when delete a exist extra work order request item, will remove the extra work order request item in put parameter, it's hard delete
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of extra work order request to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Object for update extra work order request
+          required: true
+          schema:
+            $ref: '#/definitions/extra_work_order_request'
+      responses:
+        '200':
+          description: Update extra work order request successfully
+        '400':
+          description: Failed to update extra work order request
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: Extra work order request not found
+    patch:
+      tags:
+        - Extra work order requests
+      summary: Update status and comments for extra work order request
+      description: Update status and comments for extra work order request, when update the status as approved, should mark the work_order_status to in progress, issue, complete
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of extra work order request to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Update part parameter for extra work order request
+          required: true
+          schema:
+            allOf:
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    example: flagged
+                  comments:
+                    type: string
+                    example: Picture is not clear
+                  ewo_status:
+                    type: string
+                    example: issued, in progress, completed
+      responses:
+        '200':
+          description: update the status scuessfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: Extra work order request not found
+  /mobile/devices:
+    post:
+      tags:
+        - Notification
+      summary: Register device to notification service
+      description: Register device information to notification service
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: body
+          in: body
+          description: Device object for push notification service
+          required: true
+          schema:
+            $ref: '#/definitions/device_param'
+      responses:
+        '200':
+          description: Register notification service successfully
+          schema:
+            $ref: '#/definitions/device_param'
+        '400':
+          description: Invalid user_id or invalid platform
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/devices/{registration_id}:
+    delete:
+      tags:
+        - Notification
+      summary: Unregister device from notification service
+      description: When user logout, should unregister device from current notification service.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: registration_id
+          in: path
+          description: fcm token
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Unregister notification service successfully
+        '400':
+          description: Invalid user_id or invalid platform
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/work_items:
+    get:
+      tags:
+        - work items
+      summary: Get work items list
+      description:
+        Get  work items list which status is assigned, and assign_to_person is
+        current user, the work item list should
+
+        - group by work_order
+
+        - work_order should order by work_order_due_date(ascending order).
+
+        - work_items in work_order should order by work_item_id
+
+
+        for the search, it need hava the pattern search for four options, work item name, work item category, activity code, region
+
+
+        for the map, work item list need filter by the reigin id and category id
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: limit
+          in: query
+          description: __need when *not implement* offline cache__
+
+            Number of results to return per page
+          type: integer
+        - name: offset
+          in: query
+          description: __need when *not implement* offline cache__
+
+            The initial index from which to return the results.
+          type: integer
+        - name: status
+          in: query
+          description: Should filter the status, current default value is assigned (supports comma separated values)
+          type: string
+        - name: assign_to_person
+          in: query
+          description: Should filter work items assign to somebody
+          type: string
+        - name: region
+          in: query
+          description: __need when *not implement* offline cache__
+
+            filter by region
+          type: string
+        - name: work_item_template_category_id
+          in: query
+          description: __need when *not implement* offline cache__
+
+            filter by category
+          type: string
+      responses:
+        '200':
+          description: Success get the work item list
+          schema:
+            $ref: '#/definitions/work_items'
+  /mobile/production_reports:
+    get:
+      tags:
+        - production reports
+      summary: Get production reports
+      description:
+        Get production reports list. If current user is lead worker, return production reports that created_by is current user. If current user is construction manager, returns production reports that approver is current user.
+
+        For get Bernie's DPR list, there are two ordering options.
+
+        1. Sort the list by report status in the sequence of flagged, resubmitted, submitted, approved. Within each status sort the list by submitted
+        date, newest on the top (see note for resubmitted reports).
+
+        - request param example
+
+        ordering_by_status=flagged,resubmitted,submitted, approved&ordering=submitted_date
+
+        2. Sort the list by submitted date.
+        __# only for *none-offline-cache* implementation__
+
+        - request param example
+
+        ordering=submitted_date
+
+
+        For get Bill's DPR list, there are two ordering options.
+
+        1. Sort the list by report status in the sequence of resubmitted, submitted,
+        flagged, approved. Then for each status sort the list by report date, newest on the top.
+
+        - request param example
+
+        ordering_by_status=resubmitted,submitted,flagged,approved&ordering=report_date
+
+        2. Sort the list by report date.
+        __# only for *none-offline-cache* implementation__
+
+        - request param example
+
+        ordering=report_date
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          type: integer
+        - name: ordering_by_status
+          in: query
+          description: Which field to use when ordering the results, it will give a parameter like this 'flagged,resubmitted,submitted,approved'
+            __BC not implemented yet__
+          type: string
+        - name: ordering
+          in: query
+          description: Which field to use when ordering the results.
+          type: string
+        - name: created_by
+          in: query
+          description:
+            Filter production report by create_by (user_id), only exist when
+            role is lead worker
+          type: string
+        - name: approver
+          in: query
+          description:
+            Filter production report by approver (user_id), only exist when role
+            is construction manager
+          type: string
+        - name: status
+          in: query
+          description:
+            Filter production report by status (supports comma separated values)
+          type: string
+      responses:
+        '200':
+          description: Get production reports successfully
+          schema:
+            $ref: '#/definitions/production_reports'
+    post:
+      tags:
+        - production report
+      summary: Create production report
+      description:
+        Create a production report
+
+        For add, edit and delete material on production report Line
+
+        * add the material, should add the materail data from the material list like this
+
+            1. material (id)
+
+            2. quantity_description(description)
+
+            3. estimated_quantity(0 when create)
+
+            4. quantity
+
+            5. remaining_quantity
+
+
+         * edit the quantity, should replace the parameter like this
+
+            1. material (id)
+
+            2. quantity_description(description)
+
+          * delete the quantity, just remove the quantity
+
+
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT access token
+          type: string
+        - name: body
+          in: body
+          description: Object for create production report
+          required: true
+          schema:
+            $ref: '#/definitions/production_report_min'
+      responses:
+        '200':
+          description: Create production report successfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/production_reports/{id}:
+    put:
+      tags:
+        - production report
+      summary: Update production report
+      description: Update a production report
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of production report to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Object for update production report
+          required: true
+          schema:
+            $ref: '#/definitions/production_report_base'
+      responses:
+        '200':
+          description: Update production report successfully
+        '400':
+          description: Failed to update production report
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: ProductionReport not found
+    patch:
+      tags:
+        - production report
+      summary: Update status and comments for production report
+      description: Update status and comments for production report
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: id
+          in: path
+          description: ID of production report to return
+          required: true
+          type: integer
+          format: int64
+        - name: body
+          in: body
+          description: Update part parameter for project report
+          required: true
+          schema:
+            allOf:
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    example: flagged
+                  comments:
+                    type: string
+                    example: Picture is not clear
+      responses:
+        '200':
+          description: update the status scuessfully
+        '400':
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/api_error'
+        '404':
+          description: ProductionReport not found
+  /auth/token/obtain:
+    post:
+      tags:
+        - auth
+      summary: Logs user into the system
+      description: Login user into the system via email and password
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          description: User object for login
+          required: true
+          schema:
+            $ref: '#/definitions/login_param'
+      responses:
+        '200':
+          description: Login successfully
+          schema:
+            $ref: '#/definitions/login_response'
+        '400':
+          description: Invalid username/password supplied
+          schema:
+            $ref: '#/definitions/api_error'
+  /auth/token/delete:
+    delete:
+      tags:
+        - auth
+      summary: Logout current user
+      description: Clear JWT token in server when logout user
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+      responses:
+        '200':
+          description: Logout successfully
+        '400':
+          description: Logout failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /auth/token/refresh:
+    post:
+      tags:
+        - auth
+      summary: Refresh JWT token
+      description: Return refreshed JWT token based on existing valid token and deactive previous token.
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+      responses:
+        '200':
+          description: Refresh token successfully
+          schema:
+            $ref: '#/definitions/login_response'
+        '400':
+          description: Logout failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /auth/token/reset_password:
+    post:
+      tags:
+        - auth
+      summary: Forgot password
+      description: Send reset password link to user via user's email address
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          description: Param for forgot password
+          required: true
+          schema:
+            $ref: '#/definitions/reset_password_param'
+      responses:
+        '200':
+          description: Reset password successfully
+        '400':
+          description: Reset password failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /mobile/materials:
+    get:
+      tags:
+        - work item materials
+      summary: Get materials for work item
+      description: Get work item template by work item, and then get material list by work item template
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: network_operator
+          in: query
+          description:
+            filter by network operator
+          type: integer
+        - name: network_operator_category
+          in: query
+          description: __need when *not implement* offline cache__
+
+            filter by category
+          type: integer
+      responses:
+        '200':
+          description: Get materials successfully
+          schema:
+            $ref: '#/definitions/materials'
+        '400':
+          description: Get materials failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /wbs/work_package_files:
+    get:
+      tags:
+        - work package attachments
+      summary: Get work package attachments
+      description: Get work package attachements
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: work_package
+          in: query
+          description: ID of work package
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Get attachments successfully
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/attachments'
+        '400':
+          description: Get attachments failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /production/production_report_pictures:
+    post:
+      tags:
+        - upload photos
+      summary: upload photos for a reportline/ production report (one at the time)
+      description: upload photos, will pass multipart/form-data array in body param.
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          description: multipart/form-data
+          type: string
+        - name: picture
+          in: formData
+          description: the picture
+          required: true
+          type: file
+        - name: comments
+          in: formData
+          description: comments about the picture
+          type: string
+        - name: production_report
+          in: formData
+          description: production report id to upload picture
+          type: integer
+        - name: production_report_line
+          in: formData
+          description: production report line id to upload picture
+          type: integer
+      responses:
+        '200':
+          description: Upload photo successfully
+          schema:
+            $ref: '#/definitions/production_report_picture'
+        '400':
+          description: Upload photo failed
+          schema:
+            $ref: '#/definitions/api_error'
+  /network_operator/as_built_requirements:
+    get:
+      tags:
+        - as built
+      summary: Get as built requirements
+      description: as built requirements for network operator and category
+      produces:
+        - application/json
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT token
+          type: string
+        - name: network_operator
+          in: query
+          description:
+            filter by network operator
+          type: integer
+        - name: element_category
+          in: query
+          description: __need when *not implement* offline cache__
+
+            filter by category
+          type: integer
+      responses:
+        '200':
+          description: Get as built requirements successfully
+          schema:
+            $ref: '#/definitions/as_built_requirement'
+        '400':
+          description: Get as built reqs failed
+          schema:
+            $ref: '#/definitions/api_error'
+definitions:
+  login_param:
+    type: object
+    properties:
+      email:
+        type: string
+        example: fresnel@example.com
+      password:
+        type: string
+        example: fresnel123456
+  work_items:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 40068
+      next:
+        type: string
+        example: xxx/api/v1/mobile/work_items/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/work_items/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/work_item_detail'
+  work_item_base:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 4666
+      activity_code:
+        type: string
+        example: 412a
+      name:
+        type: string
+      work_order:
+        type: integer
+        format: int64
+        example: 125
+      work_order_name:
+        type: string
+        example: Cabling
+      work_order_schedule_end_date:
+        type: string
+        example: '2017-07-20T03:33:35Z'
+      work_package:
+        type: integer
+        example: 1234
+        description: work package id
+      work_package_name:
+        type: string
+        example: Distribution Network - 3151a
+      quantities:
+        type: array
+        items:
+          $ref: '#/definitions/quantity'
+      network_element:
+        $ref: '#/definitions/network_element'
+      requires_photo:
+        type: boolean
+        example: true
+      region:
+        type: integer
+        format: int64
+        example: 125
+      region_name:
+        type: string
+        example: region name
+      network_operator:
+        type: integer
+        example: 191
+      work_item_category:
+        type: integer
+        format: int64
+        example: 127
+      work_item_category_name:
+        type: string
+        example: category name
+  work_item_detail:
+    allOf:
+      - $ref: '#/definitions/work_item_base'
+  quantity:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 1353(value is null when create)
+      quantity_description:
+        type: integer
+        format: int64
+        example: 493
+      quantity_description_unit_imperial:
+        type: string
+        example: ft
+      quantity_description_name:
+        type: string
+        example: cable distance
+      quantity_description_unit_metric:
+        type: string
+        example: m
+      quantity_description_unit_system:
+        type: string
+        example: metric
+      estimated_quantity:
+        type: integer
+        format: int64
+        example: 100
+        description: Can be null when material quantity is newly added.
+      quantity:
+        type: integer
+        format: int64
+        example: 100
+      remaining_quantity:
+        type: integer
+        format: int64
+        example: 100
+      is_primary_quantity:
+        type: boolean
+        example: true
+      material_name:
+        type: string
+        example: STUB-432F
+      material_type:
+        type: string
+        example: STUB-432F
+      material_category:
+        type: integer
+        format: int64
+        example: 1024
+      material:
+        type: integer
+        format: int64
+        example: 1358
+  production_quantity:
+    allOf:
+      - type: object
+        properties:
+          work_item_quantity:
+            type: integer
+            format: int64
+            example: 1358
+      - $ref: '#/definitions/quantity'
+  production_quantity_min:
+    type: object
+    properties:
+      work_item_quantity:
+        type: integer
+        format: int64
+        example: 1358
+      quantity_description:
+        type: integer
+        format: int64
+        example: 493
+      estimated_quantity:
+        type: integer
+        format: int64
+        example: 100
+        description: Can be null when material quantity is newly added.
+      quantity:
+        type: integer
+        format: int64
+        example: 100
+      remaining_quantity:
+        type: integer
+        format: int64
+        example: 100
+      material:
+        type: integer
+        format: int64
+        example: 1358
+  materials:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 40068
+      next:
+        type: string
+        example: xxx/api/v1/mobile/materials/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/materials/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/material_details'
+  material_details:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 1353
+      quantity_description_name:
+        type: string
+        example: length
+      unit:
+        type: integer
+        example: 2
+      unit_imperial:
+        type: string
+        example: ft
+      unit_metric:
+        type: string
+        example: m
+      unit_factor:
+        type: number
+        example: 3.28
+      unit_system:
+        type: string
+        example: metric
+      alias:
+        type: string
+        example: 6M Strand
+      alias_code:
+        type: string
+        example: 6MS
+      rank:
+        type: integer
+        format: int64
+        example: 1
+      material_category:
+        type: integer
+        format: int64
+        example: 21
+      material_category_name:
+        type: integer
+        format: int64
+        example: 21
+  attachments:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 40068
+      next:
+        type: string
+        example: xxx/api/v1/wbs/work_package_files/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/wbs/work_package_files/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/attachment_details'
+  attachment_details:
+    type: object
+    properties:
+      name:
+        type: string
+        example: Cable Design
+      description:
+        type: string
+        example: This is a description
+      extension:
+        type: string
+        example: pdf
+      upload:
+        type: string
+        example: 'http://example/1234.pdf'
+  production_reports:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 100
+      next:
+        type: string
+        example: xxx/api/v1/mobile/production_reports/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/production_reports/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          allOf:
+              - type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    example: 4666
+                  status:
+                    type: string
+                    example: flagged
+                    enum:
+                      - submitted
+                      - approved
+                      - flagged
+              - $ref: '#/definitions/production_report_base'
+  production_report_base:
+    type: object
+    properties:
+      document_reference:
+        type: string
+        example: ReportA
+      reported_date:
+        type: string
+        example: "2017-10-07T19:54:34Z"
+        description: report date
+      submitted_date:
+        type: string
+        example: "2017-10-07T19:51:25Z"
+        description: submitted date
+      approved_date:
+        type: string
+        example: "2017-10-07T19:51:25Z"
+        description: approved date
+      digital_signature:
+        type: string
+        example: "kjhgdfjhafg"
+        description: phone number or another digital signature
+      created_by_name:
+        type: string
+        description: The createrr name of the production report.
+        example: Will Burney(remove?)
+      approver_name:
+        type: string
+        description: The approver name of the production report.
+        example: Will Bill(null when create)
+      created_by:
+        type: integer
+        description: The creator id.
+        example: 2
+      approver:
+        type: integer
+        description: The approver id of the production report.
+        example: 7 (null when create)
+      notes:
+        type: string
+        description: Note when submit the report
+        example: Notes from Bernie
+      comments:
+        type: string
+        description: Comments when flagging the report
+        example: Notes from Bill
+      locations:
+        type: array
+        items:
+          $ref: '#/definitions/location'
+      production_lines:
+        type: array
+        items:
+          $ref: '#/definitions/production_report_line'
+  production_report_min:
+    type: object
+    properties:
+      document_reference:
+        type: string
+        example: ReportA
+      reported_date:
+        type: string
+        example: "2017-10-07T19:51:25Z"
+        description: report date
+      submitted_date:
+        type: string
+        example: "2017-10-07T19:51:25Z"
+        description: submitted date
+      digital_signature:
+        type: string
+        example: "kjhgdfjhafg"
+        description: phone number or another digital signature
+      notes:
+        type: string
+        description: Note when submit the report
+        example: Notes from Burney
+      comments:
+        type: string
+        description: Comments when flagging the report
+        example: Notes from Bill
+      locations:
+        type: array
+        items:
+          $ref: '#/definitions/location'
+      production_lines:
+        type: array
+        items:
+          $ref: '#/definitions/production_report_line_min'
+  production_report_line:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 1234(value is null when create)
+      work_item:
+        type: integer
+        format: int64
+        description: work item id for the DPR line
+        example: 1353
+      activity_code:
+        type: string
+        example: 412a
+      work_item_descriptor:
+        type: string
+        example: Aerial cable
+      quantities:
+        type: array
+        items:
+          $ref: '#/definitions/production_quantity'
+      comments:
+        type: string
+        example: Not finished
+      work_item_completed:
+        type: boolean
+        example: false
+      reference_from:
+        type: string
+        example: P30
+      reference_to:
+        type: string
+        example: P40
+      requires_photo:
+        type: boolean
+        example: true
+      is_active:
+        type: boolean
+        example: true
+      network_operator:
+        type: integer
+        example: 191
+      pictures:
+        type: array
+        items:
+          $ref: '#/definitions/production_report_picture'
+      network_element:
+        $ref: '#/definitions/network_element'
+  production_report_line_min:
+    type: object
+    properties:
+      work_item:
+        type: integer
+        format: int64
+        description: work item id for the DPR line
+        example: 1353
+      quantities:
+        type: array
+        items:
+          $ref: '#/definitions/production_quantity_min'
+      comments:
+        type: string
+        example: Not finished
+      work_item_completed:
+        type: boolean
+        example: false
+      reference_from:
+        type: string
+        example: P30
+      reference_to:
+        type: string
+        example: P40
+      network_element:
+        $ref: '#/definitions/network_element_min'
+      pictures:
+        type: array
+        items:
+          $ref: '#/definitions/production_report_picture_ref'
+  production_report_picture_ref:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 466
+  production_report_picture:
+    type: object
+    description: When remove a picture from DPR line, just remove it from the request. Then server can do batch deletion based on the difference of current production_line_pictures and previous production_line_pictures.
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 4666
+      picture:
+        type: string
+        example: "http://localhost:8000/media/production_report_pictures/headshot_bruno.jpg"
+      thumbnail:
+        type: string
+        example: "http://localhost:8000/media/production_report_pictures/headshot_bruno.jpg"
+      comments:
+        type: string
+        example: "Some comment"
+      location:
+        $ref: '#/definitions/location'
+  location:
+    type: object
+    properties:
+      location_type:
+        type: string
+        example: submitted (this is a string that depending on the location being sent should be set)
+      longitude:
+        type: number
+        example: 77.037692
+      latitude:
+        type: number
+        example: 38.898648
+      altitude:
+        type: number
+        example: 38.898648
+      accuracy:
+        type: number
+        example: 38.898648
+  location_min:
+    type: object
+    properties:
+      longitude:
+        type: number
+        example: 77.037692
+      latitude:
+        type: number
+        example: 38.898648
+      altitude:
+        type: number
+        example: 38.898648
+      accuracy:
+        type: number
+        example: 38.898648
+  network_element_min:
+    properties:
+      as_built_annotations:
+          type: array
+          items:
+            $ref: '#/definitions/as_built_annotations_min'
+  network_element:
+    properties:
+      id:
+        type: string
+        example: e2cee669-782e-4b52-8176-94cc5d0bf82d
+      label:
+        type: string
+        example: cable-1
+      go_from:
+        type: string
+        example: from
+      go_to:
+        type: string
+        example: to
+      the_geom:
+        type: string
+        example: "{\"coordinates\": [[[-91.90216779871662, 39.148406432505595], [-91.90232821281158, 39.14827013151372]]], \"type\": \"MultiLineString\"}"
+      category:
+        type: integer
+        example: 1234
+      as_built_annotations:
+        type: array
+        items:
+          $ref: '#/definitions/as_built_annotations'
+  as_built_requirement:
+    properties:
+      id:
+        type: integer
+        example: 1234
+      name:
+        type: string
+        example: Manufactorer
+      code:
+        type: string
+        example: Man
+      description:
+        type: string
+        example: Manufacturer for network element
+      data_type:
+        type: string
+        example: string or number
+      order:
+        type: integer
+        example: 2
+      element_category:
+        type: integer
+        example: 3
+      is_mandatory:
+        type: boolean
+        example: True
+  as_built_annotations:
+    properties:
+      id:
+        type: integer
+        example: 1234
+      name:
+        type: string
+        example: Manufactorer
+      code:
+        type: string
+        example: Man
+      value:
+        type: string
+        example: 288-SADJ,SWR
+      data_type:
+        type: string
+        example: string or number
+  as_built_annotations_min:
+    properties:
+      name:
+        type: string
+        example: Manufactorer
+      code:
+        type: string
+        example: Man
+      value:
+        type: string
+        example: 288-SADJ,SWR
+      data_type:
+        type: string
+        example: string or number
+  login_response:
+    type: object
+    properties:
+      modules:
+              type: array
+              items:
+                type: string
+              example: ["admin","premises","production_reports","construction_manager","program_management","scheduling","lead_worker","inventory","invoicing","work_orders","engineering"]
+      token:
+        type: string
+        description: JWT token
+        example: "jwt_token"
+      user:
+        type: object
+        properties:
+          id:
+            type: string
+            description: User id
+            example: 01
+          first_name:
+            type: string
+          email:
+            type: string
+          last_name:
+            type: string
+          profile:
+            $ref: '#/definitions/profile'
+  reset_password_param:
+    type: object
+    properties:
+      email:
+        type: string
+        description: email address
+        example: test@fresnel.cc
+  profile:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: the profile id
+        example: 636
+      address1:
+        type: string
+        description: one of the fields
+        example: 'somewhere'
+  device_param:
+    type: object
+    properties:
+      id:
+        type: string
+        example: 16(will not send when create)
+        description: Will not send this parameter when create
+      registration_id:
+        type: string
+        example: fcm token
+      user:
+        type: string
+        example: 16(user id)
+        description: use user.id, not user.profile.id
+      device_id:
+        type: string
+        example: uuidxxx
+        description: device id
+      type:
+        type: string
+        example: ios(or android)
+  quantity_descriptions:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 20
+      next:
+        type: string
+        example: xxx/api/v1/mobile/quantity_descriptions/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/extra_work_order_requests/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/quantity_description_item'
+  extra_work_order_requests:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 20
+      next:
+        type: string
+        example: xxx/api/v1/mobile/extra_work_order_requests/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/extra_work_order_requests/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          allOf:
+              - type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    example: 4666
+                  status:
+                    type: string
+                    example: flagged
+                    enum:
+                      - submitted
+                      - approved
+                      - flagged
+              - $ref: '#/definitions/extra_work_order_request'
+  extra_work_order_request_min:
+    type: object
+    properties:
+      name:
+        type: string
+        example: Extra Work Order Name
+      submitted_date:
+        type: string
+        example: "2017-10-07T19:51:25Z"
+        description: submitted date
+      notes:
+        type: string
+        description: Note when submit the report
+        example: Notes from Burney
+      comments:
+        type: string
+        description: Comments when flagging the report
+        example: Notes from Bill
+      work_package:
+        type: integer
+        format: int64
+        example: 1234
+      associated_work_order:
+        type: integer
+        format: int64
+        example: 1234(optional)
+      description:
+        type: string
+        example: description of work
+      status:
+        type: string
+        example: not pass the parameter when create and update the extra work order, when create it the value is submitted, when put the report the value is resubmitted
+        enum:
+          - submitted
+          - flagged
+          - resubmitted
+          - issued
+          - in progress
+          - completed
+      location:
+        allOf:
+          - $ref: '#/definitions/location_min'
+      address:
+       type: string
+       example: address detail
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/extra_work_order_request_item'
+
+  extra_work_order_request:
+    allOf:
+      - type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            example: 1234
+          created_by_name:
+            type: string
+            description: The createrr name of the production report.
+            example: Will Burney
+          approver_name:
+            type: string
+            description: The approver name of the production report.
+            example: Will Bill
+          created_by:
+            type: integer
+            description: The creator id.
+            example: 2
+          approver:
+            type: integer
+            description: The approver id of the production report.
+            example: 7
+          work_package_name:
+            type: string
+            example: work package name
+          associated_work_order_name:
+            type: string
+            example: work order name(optional)
+      - $ref: '#/definitions/extra_work_order_request_min'
+
+  extra_work_order_request_item:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 1234(not pass this when new added)
+      name:
+        type: string
+        example: Extra Work Order Item Name
+      quantity:
+        type: integer
+        format: int64
+        example: 100
+      quantity_description:
+        type: integer
+        format: int64
+        example: 1001
+      quantity_description_unit_imperial:
+        type: string
+        example: ft (will not post when added new item)
+      quantity_description_unit_metric:
+        type: string
+        example: m (will not post when added new item)
+      quantity_description_unit_system:
+        type: string
+        example: metric (will not post when added new item)
+      rate:
+        type: integer
+        format: int64
+        example: 100 (the maoney of each unit)
+      comments:
+        type: string
+        example: comment form brenie
+      description:
+        type: string
+        example: description of work
+      address:
+       type: string
+       example: address detail
+      location:
+        allOf:
+          - $ref: '#/definitions/location_min'
+      code:
+        type: string
+        example: (pass '' when create)
+  quantity_description_item:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: will not pass when create
+        example: 1
+      created:
+        type: string
+        example: "2017-10-25T21:47:43Z"
+      name:
+        type: string
+        example: area (m²)
+      description:
+        type: string
+        example: area measured in units of square meter
+      standard_unit_system:
+        type: string
+        example: metric
+      unit:
+        type: string
+        example: 8
+      unit_imperial_name:
+        type: string
+        example: ft^2
+      unit_metric_name:
+        type: string
+        example: m^2
+      unit_factor:
+        type: string
+        example: 10.7639
+  timesheets:
+    type: object
+    properties:
+      count:
+        type: integer
+        format: int64
+        example: 20
+      next:
+        type: string
+        example: xxx/api/v1/mobile/timesheets/?limit=10&offset=30
+      previous:
+        type: string
+        example: xxx/api/v1/mobile/timesheets/?limit=10&offset=10
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/timesheet'
+  timesheet:
+    allOf:
+      - type: object
+        properties:
+          id:
+            type: integer
+            format: int64
+            example: 20
+          created_by_name:
+            type: string
+            description: The createrr name of the production report.
+            example: Will Burney
+          approver_name:
+            type: string
+            description: The approver name of the production report.
+            example: Will Bill
+          created_by:
+            type: integer
+            description: The creator id.
+            example: 2
+          approver:
+            type: integer
+            description: The approver id of the production report.
+            example: 7
+      - $ref: '#/definitions/timesheet_min'
+  timesheet_min:
+    type: object
+    properties:
+      name:
+        type: string
+        example: timesheet name
+      status:
+        type: string
+        example: submitted(not pass when create the timesheet)
+      description:
+        type: string
+        example: the description of the timesheet
+      notes:
+        type: string
+        example: note from Bernie
+      comments:
+        type: string
+        example: comments from Bill
+      submitted_date:
+        type: string
+        example: "2017-10-25T21:47:43Z"
+      digital_signature:
+        type: string
+        example: comments from Bill
+      lines:
+        type: array
+        items:
+          $ref: '#/definitions/timesheet_item'
+  timesheet_item:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        example: 20(not use when new added)
+      date:
+        type: string
+        example: "2017-10-25"
+      job_code:
+        type: string
+        example: code
+      hours:
+        type: integer
+        format: int64
+        example: 6
+  api_error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+        example: 400
+      message:
+        type: string
+        example: 'Some error message'

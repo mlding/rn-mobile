@@ -1,0 +1,6 @@
+const NO_MATERIAL_NEEDED = 'No Materials Needed'
+export const WORK_ITEMS_LIST_TYPE = {
+  SELECT: 'WORK_ITEMS_SELECT_LIST',
+  LIST: 'WORK_ITEMS_LIST',
+}
+export default NO_MATERIAL_NEEDED

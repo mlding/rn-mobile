@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13174"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="launch" translatesAutoresizingMaskIntoConstraints="NO" id="5AC-Z0-VVG">
+                    <rect key="frame" x="0.0" y="0.0" width="379" height="667"/>
+                </imageView>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" text="Powered By:" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="bXV-uu-utD">
+                    <rect key="frame" x="200" y="622" width="82" height="32"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="32" id="Fo8-4h-cHk"/>
+                        <constraint firstAttribute="width" constant="85" id="TEv-t7-rmv"/>
+                    </constraints>
+                    <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <imageView userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="copyright" translatesAutoresizingMaskIntoConstraints="NO" id="3Z6-0S-mLW">
+                    <rect key="frame" x="273" y="597" width="92" height="70"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="95" id="bOS-iP-gmg"/>
+                        <constraint firstAttribute="height" constant="70" id="lPq-e1-yCU"/>
+                    </constraints>
+                </imageView>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="5AC-Z0-VVG" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="05S-QQ-f1u"/>
+                <constraint firstAttribute="bottom" secondItem="bXV-uu-utD" secondAttribute="bottom" constant="15" id="2CM-XH-T9a"/>
+                <constraint firstAttribute="trailing" secondItem="3Z6-0S-mLW" secondAttribute="trailing" constant="10" id="9WJ-bS-hyT"/>
+                <constraint firstItem="5AC-Z0-VVG" firstAttribute="bottom" secondItem="iN0-l3-epB" secondAttribute="bottomMargin" id="MXe-gp-LxC"/>
+                <constraint firstItem="5AC-Z0-VVG" firstAttribute="trailing" secondItem="iN0-l3-epB" secondAttribute="trailingMargin" constant="20" id="TKc-MG-lFV"/>
+                <constraint firstItem="5AC-Z0-VVG" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="topMargin" constant="-20" id="fgv-Eh-5al"/>
+                <constraint firstAttribute="bottom" secondItem="3Z6-0S-mLW" secondAttribute="bottom" constant="5" id="g4m-RU-5wQ"/>
+                <constraint firstAttribute="bottom" secondItem="5AC-Z0-VVG" secondAttribute="bottom" id="rEv-Ta-cj5"/>
+                <constraint firstItem="3Z6-0S-mLW" firstAttribute="leading" secondItem="bXV-uu-utD" secondAttribute="trailing" constant="-10" id="y0j-wt-1f4"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <point key="canvasLocation" x="583.5" y="488.5"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="copyright" width="76" height="76"/>
+        <image name="launch" width="375" height="667"/>
+    </resources>
+</document>
